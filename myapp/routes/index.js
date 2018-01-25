@@ -2,7 +2,18 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 
-var mongoDB = require('./connect');
+var ObjectID = require('mongodb').ObjectID; //to get id in collection useful for delete update
+
+//##### [START]MongoDB #####
+var mongo = require('./connect').mongo;
+var url = require('./connect').url;
+var db_name = require('./connect').db;
+var mongoDB = null;
+mongo.connect(url, function(err, db) {
+    mongoDB = db.db(db_name);
+});
+//##### [END]MongoDB #####
+
 var db = require('./connect-mysql');
 
 
@@ -165,8 +176,20 @@ router.post('/insert-mongo', function(req, res, next) { //From Ajax
 });
 
 router.get('/select-mongo', function(req, res, next) {
-    mongoDB.collection('books').find().toArray(function(err, rs) {
-        res.send(rs);
+    // mongoDB.collection('books').find().toArray(function(err, rs) {
+    //     res.send(rs);
+    // });
+    mongoDB.collection('books').aggregate([{
+        $lookup: {
+            from: 'users',
+            localField: '_id',
+            foreignField: 'user_id',
+            as: 'user'
+        }
+    }], function(err, rs) {
+        // var rs = JSON.stringify(rs);
+        // if (err) console.log(err);
+        // res.send(rs);
     });
 });
 
@@ -179,6 +202,14 @@ router.post('/del-mongo', function(req, res, next) {
         res.send({ message: 'success' });
     });
 });
+
+router.get('/home', function(req, res, next) {
+    res.render('home');
+});
+
+router.get('/quotation-bill', function(req, res, next) {
+    res.render('quotation-bill');
+})
 
 
 

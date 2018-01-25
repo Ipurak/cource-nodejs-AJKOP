@@ -1,0 +1,28 @@
+<script src="/javascripts/print.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/stylesheets/print.min.css">
+<script>
+    function printBill() {
+        printJS('page', 'html');
+    }
+</script>
+<button class="btn btn-info" onclick="printBill()">Print</button>
+<div id="page">
+    <h3>Quotation</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Book</td>
+                <td>80,000</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

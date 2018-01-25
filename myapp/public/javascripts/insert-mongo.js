@@ -1,5 +1,5 @@
-var appMongo = angular.module('appMongo', []);
-appMongo.controller('MongoController', function($scope, $http) {
+// var app = angular.module('myApp', []);
+app.controller('MongoController', function($scope, $http) {
     // alert("aa");
     $scope.save = function() {
         // alert("AAA");

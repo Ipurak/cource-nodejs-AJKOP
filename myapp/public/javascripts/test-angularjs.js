@@ -1,4 +1,3 @@
-var app = angular.module('myApp', []);
 app.controller('MyController', function($scope, $http) {
     $scope.x = 10;
     $scope.changeX = function() {
