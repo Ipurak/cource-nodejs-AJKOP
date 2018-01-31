@@ -1,0 +1,18 @@
+<% include head %>
+    <script src="./javascripts/allFile.js"></script>
+    <h2>All Photos</h2>
+    <div ng-app="myApp">
+        <div ng-controller="AllFileController">
+            <table>
+                <tr ng-repeat="img in images">
+                    <td>
+                        <a href="/my-upload/{{img}}" target="_blank">
+                            <img src="/my-upload/{{img}}" width="300px"> Download
+                        </a>
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <% include footer %>

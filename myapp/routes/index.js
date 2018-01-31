@@ -2,6 +2,9 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 
+var fileUpload = require('express-fileupload');
+router.use(fileUpload());
+
 var ObjectID = require('mongodb').ObjectID; //to get id in collection useful for delete update
 
 //##### [START]MongoDB #####
@@ -20,7 +23,7 @@ var db = require('./connect-mysql');
 
 //##### [START]Layout #####
 var layout = require('express-ejs-layouts');
-router.use(layout);
+// router.use(layout);
 //##### [END]Layout #####
 
 router.get('/test-connect-mongo', function(req, res, next) {
@@ -175,22 +178,86 @@ router.post('/insert-mongo', function(req, res, next) { //From Ajax
 
 });
 
-router.get('/select-mongo', function(req, res, next) {
-    // mongoDB.collection('books').find().toArray(function(err, rs) {
-    //     res.send(rs);
+router.get('/select-mongo', async function(req, res, next) {
+
+    mongoDB.collection('books')
+        .find()
+        .sort({ name: -1 }).toArray(function(err, rs) {
+            var arr = [];
+
+            if (rs != null)
+                rs.forEach(book => {
+
+                    var con = { _id: new ObjectID(book.user_id) };
+
+                    var user_name;
+
+                    mongoDB.collection('users')
+                        .find(con).toArray(function(err, rs) {
+                            if (err) console.log(err);
+
+                            if (rs[0] != null) {
+                                user_name = rs[0].name;
+                            }
+
+                            var row = {
+                                _id: book._id,
+                                isbn: book.isbn,
+                                name: book.name,
+                                user_name: user_name
+                            }
+
+                            arr.push(row);
+
+                        })
+
+                });
+
+            setTimeout(() => {
+                res.send(arr);
+            }, 100);
+
+        });
+    // mongoDB.collection('books').aggregate([{
+    //     $lookup: {
+    //         from: 'users',
+    //         localField: '_id',
+    //         foreignField: 'user_id',
+    //         as: 'user'
+    //     }
+    // }], function(err, rs) {
+    //     // var rs = JSON.stringify(rs);
+    //     // if (err) console.log(err);
+    //     // res.send(rs);
     // });
-    mongoDB.collection('books').aggregate([{
-        $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: 'user_id',
-            as: 'user'
-        }
-    }], function(err, rs) {
-        // var rs = JSON.stringify(rs);
-        // if (err) console.log(err);
-        // res.send(rs);
+});
+
+router.post('/bookAll', function(req, res, next) {
+
+    mongo.connect(url, function(err, db) {
+        if (err) console.log(err);
+        mongoDB = db.db(db_name);
+
+        mongoDB.collection('books')
+            .find().toArray(function(err, rs) {
+                if (err) console.log(err);
+                res.send(rs);
+            });
     });
+
+});
+
+router.post('/userInfo', function(req, res, next) {
+    var con = { _id: new ObjectID(req.body.user_id) };
+    mongo.connect(url, function(err, db) {
+        if (err) console.log(err);
+        mongoDB.collection('users')
+            .find(con).toArray(function(err, rs) {
+                if (err) console.log(err);
+                res.send(rs);
+            });
+    });
+    res.send({ name: "aaa" });
 });
 
 router.post('/del-mongo', function(req, res, next) {
@@ -211,6 +278,76 @@ router.get('/quotation-bill', function(req, res, next) {
     res.render('quotation-bill');
 })
 
+router.get('/testUpload', function(req, res, next) {
+    res.render('testUpload');
+})
 
+router.post('/testUpload', function(req, res, next) {
+    if (req.files.myFile != undefined) {
+        var i = 0;
+        // single file
+        if (req.files.myFile.name != undefined) {
+            var myFile = req.files.myFile;
+            var arr = myFile.name.split('.');
+            var ext = arr[arr.length - 1];
+            var d = new Date();
+            var newName = d.getFullYear() +
+                d.getMonth() + "" +
+                d.getDate() + "" +
+                d.getHours() + "" +
+                d.getMinutes() + "" +
+                d.getSeconds() + "" +
+                d.getMilliseconds() + "" +
+                "." + ext;
+            var path = __dirname.replace("/routes", '')
+                .replace("\\routes", '');
+            path = path + '/public/my-upload/' + newName;
+            myFile.mv(path, function(err) {
+                if (err) console.log(err);
+            });
+        } else {
+            // multiple file
+            req.files.myFile.forEach(myFile => {
+                i++;
+                var arr = myFile.name.split('.');
+                var ext = arr[arr.length - 1];
+                var d = new Date();
+                var newName = d.getFullYear() +
+                    d.getMonth() + "" +
+                    d.getDate() + "" +
+                    d.getHours() + "" +
+                    d.getMinutes() + "" +
+                    d.getSeconds() + "" +
+                    d.getMilliseconds() + "" +
+                    i + "" +
+                    "." + ext;
+                var path = __dirname.replace("/routes", '')
+                    .replace("\\routes", '');
+                path = path + '/public/my-upload/' + newName;
+                myFile.mv(path, function(err) {
+                    if (err) console.log(err);
+                });
+            });
+        }
+        res.send("upload successfuly!!");
+    } else {
+        res.send("Please, select a file.");
+    }
+})
+
+router.get('/allFile', function(req, res, next) {
+    res.render('allFile');
+})
+
+router.get('/fileInDir', function(req, res, next) {
+    var path = __dirname.replace('/routes', '').replace("\\router", '');
+    path = path + "/public/my-upload/";
+
+    fs.readdir(path, function(err, files) {
+        if (err) console.log(err);
+        res.send(files);
+    });
+
+})
 
 module.exports = router;

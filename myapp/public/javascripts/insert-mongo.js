@@ -28,5 +28,32 @@ app.controller('MongoController', function($scope, $http) {
         })
     }
 
-    $scope.loadData();
+    $scope.loadBookAll = function() {
+        $http.post('/bookAll').then(res => {
+            var arr = [];
+            res.data.forEach(item => {
+                var param = { user_id: item.user_id };
+
+                $http.post('/userInfo', param).then(res => {
+                    var user_name = "";
+
+                    if (res.data[0] != null) {
+                        user_name = res.data[0].name;
+                    }
+                    var row = {
+                        _id: item._id,
+                        isbn: item.isbn,
+                        name: item.name
+                    };
+                    arr.push(row);
+
+                });
+
+            });
+            $scope.books = res.data;
+        });
+    }
+
+    // $scope.loadData();
+    $scope.loadBookAll();
 });
